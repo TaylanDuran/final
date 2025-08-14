@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Destek Talebi | Zylfit PT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-50 text-gray-800">
+    <header class="bg-white shadow mb-6">
+      <div class="max-w-7xl mx-auto px-4 py-6 flex items-center justify-between">
+        <a href="/" class="flex items-center text-xl font-bold text-indigo-600">
+          <img src="/img/logo.png" alt="Zylfit" class="h-8 w-auto mr-2" />
+          <span>Zylfit</span>
+        </a>
+        <nav class="space-x-4 hidden md:flex">
+          <a href="/" class="hover:text-indigo-600">Ana Sayfa</a>
+          <a href="/packages.html" class="hover:text-indigo-600">Paketler</a>
+          <a href="/recipes.html" class="hover:text-indigo-600">Tarifler</a>
+          <a href="/support.html" class="hover:text-indigo-600">Destek</a>
+          <a href="/status.html" class="hover:text-indigo-600">Destek Durumu</a>
+        </nav>
+        <button id="mobileMenuButton" class="md:hidden text-gray-500 focus:outline-none">
+          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
+      <div id="mobileMenu" class="md:hidden hidden px-4 pb-4 space-y-2">
+        <a href="/" class="block">Ana Sayfa</a>
+        <a href="/packages.html" class="block">Paketler</a>
+        <a href="/recipes.html" class="block">Tarifler</a>
+        <a href="/support.html" class="block">Destek</a>
+        <a href="/status.html" class="block">Destek Durumu</a>
+      </div>
+    </header>
+    <main class="max-w-md mx-auto px-4 pb-16">
+      <h1 class="text-3xl font-bold mb-6 text-center">Destek Talebi Oluştur</h1>
+      <div class="bg-white p-6 rounded-lg shadow">
+        <form id="supportForm" class="space-y-4">
+          <div>
+            <label for="email" class="block mb-1 font-medium">E‑posta</label>
+            <input type="email" id="email" class="w-full px-3 py-2 border rounded" required />
+          </div>
+          <div>
+            <label for="password" class="block mb-1 font-medium">Şifre</label>
+            <input type="password" id="password" class="w-full px-3 py-2 border rounded" required />
+          </div>
+          <div>
+            <label for="message" class="block mb-1 font-medium">Mesajınız</label>
+            <textarea id="message" class="w-full px-3 py-2 border rounded" rows="4" placeholder="Sorunuzu veya talebinizi yazın"></textarea>
+          </div>
+          <div>
+            <label for="file" class="block mb-1 font-medium">Dosya (isteğe bağlı)</label>
+            <input type="file" id="file" class="w-full px-3 py-2 border rounded" />
+          </div>
+          <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700 transition">Gönder</button>
+        </form>
+        <p id="thanksMsg" class="mt-4 hidden text-green-600 font-medium">Talebiniz oluşturuldu! Ekibimiz en kısa sürede size dönüş yapacaktır. Durumu görüntülemek ve yanıtları görmek için <a href="/status.html" class="underline text-indigo-600">buraya tıklayın</a>.</p>
+      </div>
+    </main>
+    <script>
+      document.getElementById('mobileMenuButton').addEventListener('click', () => {
+        document.getElementById('mobileMenu').classList.toggle('hidden');
+      });
+      document.getElementById('supportForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const message = document.getElementById('message').value.trim();
+        const fileEl = document.getElementById('file');
+        const file = fileEl.files[0];
+        const payload = { email, password };
+        if (message) payload.message = message;
+        if (file) {
+          payload.fileName = file.name;
+          payload.file = await fileToDataUri(file);
+        }
+        if (!payload.message && !payload.file) {
+          alert('Mesaj veya dosya ekleyin.');
+          return;
+        }
+        const res = await fetch('/api/support/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          document.getElementById('supportForm').reset();
+          document.getElementById('thanksMsg').classList.remove('hidden');
+        } else {
+          alert('Talebiniz gönderilemedi.');
+        }
+      });
+
+      function fileToDataUri(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = err => reject(err);
+          reader.readAsDataURL(file);
+        });
+      }
+    </script>
+  </body>
+</html>

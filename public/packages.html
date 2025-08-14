@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Eğitim Paketleri | Zylfit PT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-50 text-gray-800">
+    <header class="bg-white shadow">
+      <div class="max-w-7xl mx-auto px-4 py-6 flex items-center justify-between">
+        <a href="/" class="flex items-center text-2xl font-bold text-indigo-600">
+          <img src="/img/logo.png" alt="Zylfit" class="h-8 w-auto mr-2" />
+          <span>Zylfit</span>
+        </a>
+        <nav class="space-x-6 hidden md:flex">
+          <a href="/" class="hover:text-indigo-600">Ana Sayfa</a>
+          <a href="/packages.html" class="hover:text-indigo-600">Paketler</a>
+          <a href="/recipes.html" class="hover:text-indigo-600">Tarifler</a>
+          <a href="/support.html" class="hover:text-indigo-600">Destek</a>
+          <a href="/status.html" class="hover:text-indigo-600">Destek Durumu</a>
+        </nav>
+        <button id="mobileMenuButton" class="md:hidden text-gray-500 focus:outline-none">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
+      <div id="mobileMenu" class="md:hidden hidden px-4 pb-4 space-y-2">
+        <a href="/" class="block">Ana Sayfa</a>
+        <a href="/packages.html" class="block">Paketler</a>
+        <a href="/recipes.html" class="block">Tarifler</a>
+        <a href="/support.html" class="block">Destek</a>
+        <a href="/status.html" class="block">Destek Durumu</a>
+      </div>
+    </header>
+    <main class="max-w-7xl mx-auto px-4 py-16">
+      <h1 class="text-4xl font-bold text-center mb-12">Eğitim Paketleri</h1>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+        <!-- Remote package -->
+        <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col">
+          <img src="img/package_remote.png" alt="Uzaktan Eğitim Paketi" class="w-full h-48 object-cover rounded-md mb-4" />
+          <h2 class="text-2xl font-semibold mb-2">Uzaktan Eğitim Paketi</h2>
+          <p class="flex-1 mb-4">Modern teknolojilerle desteklenen bu paket ile dilediğiniz yerden eğitim alabilirsiniz. Video görüşmeleri, kişiye özel antrenman planları ve sürekli çevrimiçi destek içerir.</p>
+          <a href="/support.html" class="mt-auto inline-block bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition">Bilgi Al</a>
+        </div>
+        <!-- Face-to-face package -->
+        <div class="bg-white p-6 rounded-lg shadow-lg flex flex-col">
+          <img src="img/package_face.png" alt="Yüz Yüze Eğitim Paketi" class="w-full h-48 object-cover rounded-md mb-4" />
+          <h2 class="text-2xl font-semibold mb-2">Yüz Yüze Eğitim Paketi</h2>
+          <p class="flex-1 mb-4">Profesyonel eğitmenlerimizle bire bir çalışarak hedeflerinize daha hızlı ulaşın. Salon veya açık hava alanlarında gerçekleştirdiğimiz bu paket, motivasyonunuzu artırır.</p>
+          <a href="/support.html" class="mt-auto inline-block bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition">Bilgi Al</a>
+        </div>
+      </div>
+    </main>
+    <footer class="bg-gray-800 text-gray-300 py-6">
+      <div class="max-w-7xl mx-auto px-4 text-center">
+        <p>&copy; 2025 Zylfit Personal Training. Tüm hakları saklıdır.</p>
+        <p class="mt-2"><a href="/admin.html" class="text-sm text-indigo-400 hover:text-indigo-200">Yönetici Girişi</a></p>
+      </div>
+    </footer>
+    <script>
+      document.getElementById('mobileMenuButton').addEventListener('click', () => {
+        document.getElementById('mobileMenu').classList.toggle('hidden');
+      });
+    </script>
+  </body>
+</html>

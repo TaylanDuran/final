@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Destek Talepleri | Zylfit PT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-100 text-gray-800">
+    <header class="bg-white shadow mb-6">
+      <div class="max-w-7xl mx-auto px-4 py-6 flex items-center justify-between">
+        <a href="/dashboard.html" class="text-xl font-bold text-indigo-600">← Geri</a>
+        <h1 class="text-2xl font-bold">Destek Talepleri</h1>
+        <button id="logoutButton" class="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600">Çıkış</button>
+      </div>
+    </header>
+    <main class="max-w-7xl mx-auto px-4 pb-16">
+      <div id="notificationBar" class="hidden mb-6 p-4 bg-yellow-100 border-l-4 border-yellow-400 text-yellow-700 rounded"></div>
+      <div class="flex flex-col md:flex-row gap-8">
+        <aside class="md:w-1/3 bg-white rounded-lg shadow overflow-y-auto max-h-[500px]">
+          <h2 class="text-xl font-semibold p-4 border-b">Talepler</h2>
+          <ul id="ticketList" class="divide-y"></ul>
+        </aside>
+        <section class="flex-1 bg-white rounded-lg shadow flex flex-col">
+          <div class="border-b p-4 flex items-center justify-between">
+            <h2 id="ticketTitle" class="text-xl font-semibold">Talep Seç</h2>
+            <div id="ticketActions" class="hidden space-x-2">
+              <button id="closeTicketBtn" class="px-3 py-1 bg-yellow-200 text-yellow-800 rounded hover:bg-yellow-300 transition text-sm">Kapat</button>
+              <button id="deleteTicketBtn" class="px-3 py-1 bg-red-200 text-red-800 rounded hover:bg-red-300 transition text-sm">Sil</button>
+            </div>
+          </div>
+          <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 space-y-2 bg-gray-50"></div>
+          <form id="replyForm" class="flex p-4 space-x-2 border-t">
+            <input type="text" id="replyInput" class="flex-1 px-3 py-2 border rounded" placeholder="Yanıt yazın..." />
+            <input type="file" id="replyFileInput" class="flex-none" />
+            <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition">Gönder</button>
+          </form>
+        </section>
+      </div>
+    </main>
+    <script>
+      // Auth check
+      if (!localStorage.getItem('pt_admin')) {
+        window.location.href = '/admin.html';
+      }
+      document.getElementById('logoutButton').addEventListener('click', () => {
+        localStorage.removeItem('pt_admin');
+        window.location.href = '/admin.html';
+      });
+      const ticketListEl = document.getElementById('ticketList');
+      const messagesContainer = document.getElementById('messagesContainer');
+      const ticketTitle = document.getElementById('ticketTitle');
+      const notificationBar = document.getElementById('notificationBar');
+      let currentTicketId = null;
+      let currentTicketStatus = null;
+      async function loadTickets() {
+        const res = await fetch('/api/tickets');
+        const tickets = await res.json();
+        renderTicketList(tickets);
+        updateNotifications(tickets);
+      }
+      function renderTicketList(tickets) {
+        ticketListEl.innerHTML = '';
+        if (tickets.length === 0) {
+          const li = document.createElement('li');
+          li.className = 'p-4 text-gray-500';
+          li.textContent = 'Henüz talep yok.';
+          ticketListEl.appendChild(li);
+          return;
+        }
+        tickets.forEach(ticket => {
+          const li = document.createElement('li');
+          li.className = 'p-4 hover:bg-gray-100 cursor-pointer';
+          // compute counts per email
+          const totalCount = tickets.filter(t => t.email === ticket.email).length;
+          const openCount = tickets.filter(t => t.email === ticket.email && (t.status === undefined || t.status !== 'closed')).length;
+          li.textContent = `${ticket.email} (${openCount}/${totalCount})`;
+          li.addEventListener('click', () => {
+            currentTicketId = ticket.id;
+            currentTicketStatus = ticket.status || 'open';
+            ticketTitle.textContent = `Talep: ${ticket.email}`;
+            // show actions for selected ticket
+            document.getElementById('ticketActions').classList.remove('hidden');
+            document.getElementById('closeTicketBtn').textContent = currentTicketStatus === 'closed' ? 'Yeniden Aç' : 'Kapat';
+            fetchAndRenderMessages(ticket.id);
+          });
+          ticketListEl.appendChild(li);
+        });
+      }
+      async function fetchAndRenderMessages(id) {
+        const res = await fetch(`/api/tickets/${id}`);
+        if (!res.ok) return;
+        const ticket = await res.json();
+        renderMessages(ticket.messages);
+      }
+      function renderMessages(list) {
+        messagesContainer.innerHTML = '';
+        list.forEach(msg => {
+          appendMessage(msg);
+        });
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+      function appendMessage(msg) {
+        const { sender, text, time, attachment } = msg;
+        const container = document.createElement('div');
+        container.classList.add('flex');
+        container.classList.add(sender === 'admin' ? 'justify-end' : sender === 'client' ? 'justify-start' : 'justify-center');
+        const bubble = document.createElement('div');
+        bubble.classList.add('p-3', 'rounded-lg', 'max-w-xs', 'shadow', 'whitespace-pre-wrap');
+        if (sender === 'admin') {
+          bubble.classList.add('bg-indigo-600', 'text-white');
+        } else if (sender === 'client') {
+          bubble.classList.add('bg-gray-200', 'text-gray-800');
+        } else {
+          bubble.classList.add('bg-yellow-100', 'text-gray-800');
+        }
+        // build inner html
+        let inner = '';
+        if (text) inner += `<p>${text}</p>`;
+        if (attachment) {
+          // show image preview or link based on extension
+          const lower = attachment.toLowerCase();
+          if (lower.match(/\.(png|jpg|jpeg|gif)$/)) {
+            inner += `<img src="${attachment}" alt="Ek" class="mt-2 max-w-full h-auto rounded">`;
+          } else {
+            const fileName = attachment.split('/').pop();
+            inner += `<a href="${attachment}" target="_blank" class="mt-2 text-blue-600 underline block">${fileName}</a>`;
+          }
+        }
+        inner += `<span class="block mt-1 text-xs opacity-70">${new Date(time).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span>`;
+        bubble.innerHTML = inner;
+        container.appendChild(bubble);
+        messagesContainer.appendChild(container);
+      }
+      // reply
+      document.getElementById('replyForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!currentTicketId) return;
+        const inputEl = document.getElementById('replyInput');
+        const fileEl = document.getElementById('replyFileInput');
+        const text = inputEl.value.trim();
+        const file = fileEl.files[0];
+        // prepare payload
+        let payload = { sender: 'admin' };
+        if (text) payload.text = text;
+        if (file) {
+          payload.fileName = file.name;
+          payload.file = await fileToDataUri(file);
+        }
+        if (!payload.text && !payload.file) return;
+        const res = await fetch(`/api/tickets/${currentTicketId}/message`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          // append message locally
+          const now = new Date().toISOString();
+          const msg = { sender: 'admin', time: now };
+          if (text) msg.text = text;
+          if (payload.file) {
+            // server will save and return path, but we approximate by not knowing path yet; fetch latest messages on next refresh
+          }
+          appendMessage(msg);
+          inputEl.value = '';
+          fileEl.value = '';
+        }
+      });
+
+      // convert file to data URI for upload
+      function fileToDataUri(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = err => reject(err);
+          reader.readAsDataURL(file);
+        });
+      }
+
+      // close and delete ticket actions
+      document.getElementById('closeTicketBtn').addEventListener('click', async () => {
+        if (!currentTicketId) return;
+        const newStatus = currentTicketStatus === 'closed' ? 'open' : 'closed';
+        const res = await fetch(`/api/tickets/${currentTicketId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
+        });
+        if (res.ok) {
+          currentTicketStatus = newStatus;
+          // update button text
+          document.getElementById('closeTicketBtn').textContent = newStatus === 'closed' ? 'Yeniden Aç' : 'Kapat';
+          // reload tickets list to reflect status change
+          loadTickets();
+        }
+      });
+      document.getElementById('deleteTicketBtn').addEventListener('click', async () => {
+        if (!currentTicketId) return;
+        if (!confirm('Bu talebi silmek istediğinize emin misiniz?')) return;
+        const res = await fetch(`/api/tickets/${currentTicketId}`, {
+          method: 'DELETE'
+        });
+        if (res.ok) {
+          // reset current selection
+          currentTicketId = null;
+          currentTicketStatus = null;
+          ticketTitle.textContent = 'Talep Seç';
+          messagesContainer.innerHTML = '';
+          document.getElementById('ticketActions').classList.add('hidden');
+          loadTickets();
+        }
+      });
+      // notifications
+      function updateNotifications(tickets) {
+        const now = Date.now();
+        const notes = [];
+        tickets.forEach(ticket => {
+          if (ticket.status !== 'closed' && ticket.messages && ticket.messages.length > 0) {
+            const last = ticket.messages[ticket.messages.length - 1];
+            if (last.sender === 'client') {
+              const diffMs = now - new Date(last.time).getTime();
+              const diffSec = Math.floor(diffMs / 1000);
+              let ago;
+              if (diffSec < 60) ago = `${diffSec} sn önce`;
+              else if (diffSec < 3600) ago = `${Math.floor(diffSec/60)} dk önce`;
+              else ago = `${Math.floor(diffSec/3600)} sa önce`;
+              notes.push(`Yeni mesaj: ${ticket.email} - ${ago}`);
+            }
+          }
+        });
+        if (notes.length > 0) {
+          notificationBar.classList.remove('hidden');
+          notificationBar.innerHTML = notes.map(n => `<div class="mb-1">${n}</div>`).join('');
+        } else {
+          notificationBar.classList.add('hidden');
+          notificationBar.innerHTML = '';
+        }
+      }
+      // periodic refresh
+      setInterval(() => {
+        loadTickets();
+        if (currentTicketId) fetchAndRenderMessages(currentTicketId);
+      }, 10000);
+      loadTickets();
+    </script>
+  </body>
+</html>

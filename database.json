@@ -1,0 +1,37 @@
+{
+  "admin": {
+    "username": "admin",
+    "password": "admin123"
+  },
+  "clients": [
+    {
+      "id": "meajopfe",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "startDate": "2025-08-13",
+      "active": true,
+      "daysLeft": null
+    },
+    {
+      "id": "meamjmbm",
+      "name": "Taylan",
+      "email": "tanertataylanduran@outlook.com",
+      "startDate": "2025-07-14",
+      "active": false,
+      "duration": "1",
+      "daysLeft": 0
+    },
+    {
+      "id": "meamjx7o",
+      "name": "Taylan",
+      "email": "tanertataylanduran@outlook.com",
+      "startDate": "2025-07-12",
+      "active": false,
+      "duration": "1",
+      "daysLeft": 0
+    }
+  ],
+  "programs": [],
+  "tickets": [],
+  "recipes": []
+}

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tarifler | Zylfit PT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-50 text-gray-800">
+    <header class="bg-white shadow">
+      <div class="max-w-7xl mx-auto px-4 py-6 flex items-center justify-between">
+        <a href="/" class="flex items-center text-2xl font-bold text-indigo-600">
+          <img src="/img/logo.png" alt="Zylfit" class="h-8 w-auto mr-2" />
+          <span>Zylfit</span>
+        </a>
+        <nav class="space-x-6 hidden md:flex">
+          <a href="/" class="hover:text-indigo-600">Ana Sayfa</a>
+          <a href="/packages.html" class="hover:text-indigo-600">Paketler</a>
+          <a href="/recipes.html" class="hover:text-indigo-600">Tarifler</a>
+          <a href="/support.html" class="hover:text-indigo-600">Destek</a>
+          <a href="/status.html" class="hover:text-indigo-600">Destek Durumu</a>
+        </nav>
+        <button id="mobileMenuButton" class="md:hidden text-gray-500 focus:outline-none">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
+      <div id="mobileMenu" class="md:hidden hidden px-4 pb-4 space-y-2">
+        <a href="/" class="block">Ana Sayfa</a>
+        <a href="/packages.html" class="block">Paketler</a>
+        <a href="/recipes.html" class="block">Tarifler</a>
+        <a href="/support.html" class="block">Destek</a>
+        <a href="/status.html" class="block">Destek Durumu</a>
+      </div>
+    </header>
+    <main class="max-w-7xl mx-auto px-4 py-16">
+      <h1 class="text-3xl font-bold text-center mb-8">Sağlıklı Tarifler</h1>
+      <div id="recipesContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+    </main>
+    <script>
+      document.getElementById('mobileMenuButton').addEventListener('click', () => {
+        document.getElementById('mobileMenu').classList.toggle('hidden');
+      });
+      async function loadRecipes() {
+        const res = await fetch('/api/recipes');
+        const recipes = await res.json();
+        const container = document.getElementById('recipesContainer');
+        container.innerHTML = '';
+        if (!recipes || recipes.length === 0) {
+          container.innerHTML = '<p class="text-center col-span-full text-gray-500">Henüz tarif bulunmuyor.</p>';
+          return;
+        }
+        recipes.forEach(rec => {
+          const card = document.createElement('div');
+          card.className = 'bg-white p-6 rounded-lg shadow flex flex-col';
+          let imgHtml = '';
+          if (rec.image) {
+            imgHtml = `<img src="${rec.image}" alt="${rec.title}" class="w-full h-40 object-cover rounded mb-4" />`;
+          }
+          card.innerHTML = `
+            ${imgHtml}
+            <h3 class="text-xl font-semibold mb-2">${rec.title}</h3>
+            <button class="mb-2 text-indigo-600 underline detailsBtn" data-id="${rec.id}">Detayları Gör</button>
+            <div class="details hidden">
+              <h4 class="font-semibold mt-2">Malzemeler</h4>
+              <ul class="list-disc list-inside mb-2">${rec.ingredients.split(/\n|;/).filter(x => x.trim() !== '').map(item => `<li>${item}</li>`).join('')}</ul>
+              <h4 class="font-semibold mt-2">Talimatlar</h4>
+              <p class="whitespace-pre-line">${rec.instructions}</p>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+        // details toggling
+        document.querySelectorAll('.detailsBtn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const details = e.target.parentElement.querySelector('.details');
+            details.classList.toggle('hidden');
+            btn.textContent = details.classList.contains('hidden') ? 'Detayları Gör' : 'Detayları Gizle';
+          });
+        });
+      }
+      loadRecipes();
+    </script>
+  </body>
+</html>

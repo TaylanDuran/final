@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Paneli | Zylfit PT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-100 text-gray-800">
+    <header class="bg-white shadow mb-6">
+      <div class="max-w-7xl mx-auto px-4 py-6 flex items-center justify-between">
+        <a href="/" class="flex items-center text-2xl font-bold text-indigo-600">
+          <img src="/img/logo.png" alt="Zylfit" class="h-8 w-auto mr-2" />
+          <span>Zylfit</span>
+        </a>
+        <button id="logoutButton" class="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600">Çıkış</button>
+      </div>
+    </header>
+    <main class="max-w-7xl mx-auto px-4">
+      <h1 class="text-3xl font-bold mb-6">Gösterge Paneli</h1>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white p-6 rounded-lg shadow text-center">
+          <h2 class="text-2xl font-semibold" id="clientsCount">0</h2>
+          <p class="text-gray-500 mt-1">Toplam Müşteri</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow text-center">
+          <h2 class="text-2xl font-semibold" id="recipesCount">0</h2>
+          <p class="text-gray-500 mt-1">Toplam Tarif</p>
+        </div>
+        <div class="bg-white p-6 rounded-lg shadow text-center">
+          <h2 class="text-2xl font-semibold" id="ticketsCount">0</h2>
+          <p class="text-gray-500 mt-1">Açık Destek Talepleri</p>
+        </div>
+      </div>
+      <div class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <a href="/clients.html" class="block bg-indigo-600 text-white p-6 rounded-lg shadow text-center hover:bg-indigo-700 transition">
+          Müşterileri Yönet
+        </a>
+        <a href="/messages.html" class="block bg-indigo-600 text-white p-6 rounded-lg shadow text-center hover:bg-indigo-700 transition">
+          Destek Taleplerini Yönet
+        </a>
+        <a href="/recipesAdmin.html" class="block bg-indigo-600 text-white p-6 rounded-lg shadow text-center hover:bg-indigo-700 transition">
+          Tarifleri Yönet
+        </a>
+      </div>
+    </main>
+    <script>
+      // Redirect if not logged in
+      if (!localStorage.getItem('pt_admin')) {
+        window.location.href = '/admin.html';
+      }
+      // Logout button
+      document.getElementById('logoutButton').addEventListener('click', () => {
+        localStorage.removeItem('pt_admin');
+        window.location.href = '/admin.html';
+      });
+      async function loadCounts() {
+        try {
+          const [clientsRes, recipesRes, ticketsRes] = await Promise.all([
+            fetch('/api/clients'),
+            fetch('/api/recipes'),
+            fetch('/api/tickets')
+          ]);
+          const clients = await clientsRes.json();
+          const recipes = await recipesRes.json();
+          const tickets = await ticketsRes.json();
+          document.getElementById('clientsCount').textContent = clients.length;
+          document.getElementById('recipesCount').textContent = recipes.length;
+          // count open tickets based on status
+          const openTickets = tickets.filter(t => t.status === undefined || t.status !== 'closed');
+          document.getElementById('ticketsCount').textContent = openTickets.length;
+        } catch (err) {
+          console.error(err);
+        }
+      }
+      loadCounts();
+    </script>
+  </body>
+</html>
